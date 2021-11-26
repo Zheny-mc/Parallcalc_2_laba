@@ -11,9 +11,7 @@ public class Greeter extends AbstractBehavior<IMesssage> {
     private int countStep;
     private int len;
     private double[][] matrix;
-    private ActorRef<IMesssage> workF;
-    private ActorRef<IMesssage> workS;
-    private ActorRef<IMesssage> helper;
+
     private ActorRef<IMesssage> replyTo;
 
     public static Behavior<IMesssage> create() {
@@ -25,9 +23,7 @@ public class Greeter extends AbstractBehavior<IMesssage> {
         countStep = 0;
         len = 0;
         matrix = null;
-        workF = null;
-        workS = null;
-        helper = null;
+        replyTo = null;
     }
 
     private void sendMatrixIfEnd() {
@@ -50,9 +46,9 @@ public class Greeter extends AbstractBehavior<IMesssage> {
     private Behavior<IMesssage> onBigTask(BigTask message) {
         getContext().getLog().info("Начало работы!");
         //Parsing Task
-        workF = message.getSendToF();
-        workS = message.getSendToF();
-        helper = message.getSendToThr();
+        ActorRef<IMesssage> workF = message.getSendToF();
+        ActorRef<IMesssage> workS = message.getSendToF();
+        ActorRef<IMesssage> helper = message.getSendToThr();
         len = message.getLenth();
         matrix = message.getMatrix();
         replyTo = message.getReplyTo();
@@ -103,8 +99,6 @@ public class Greeter extends AbstractBehavior<IMesssage> {
                 }
                 countStep++;
                 sendMatrixIfEnd();
-
-                workF.tell(new PostStop());
                 break;
             case 2:
                 int indent = (len/2) / 2;
@@ -114,8 +108,6 @@ public class Greeter extends AbstractBehavior<IMesssage> {
                 }
                 countStep++;
                 sendMatrixIfEnd();
-
-                workS.tell(new PostStop());
                 break;
         }
         return this;
@@ -123,13 +115,12 @@ public class Greeter extends AbstractBehavior<IMesssage> {
 
     private Behavior<IMesssage> onResultReserveArray(ResultReserveArray com) {
         if (len % 2 == 1) {
-            matrix[len / 2] = com.getArr().clone();
+            matrix[len/2] = com.getArr().clone();
         }
 
         countStep++;
         sendMatrixIfEnd();
 
-        helper.tell(new PostStop());
         getContext().getLog().info("Переворот строки завершен!");
         return this;
     }
